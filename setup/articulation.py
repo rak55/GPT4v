@@ -7,8 +7,7 @@ from openai import OpenAI
 from tqdm import tqdm
 from gpt_gleam.chat import ChatContextCreator, chat, print_messages
 from gpt_gleam.configuration import ChatCompletionConfig
-
-from gpt_gleam.data_utils import read_jsonl
+from gpt_gleam.data_utils import read_jsonl, Post, Frame, iterate_data
 from gpt_gleam.predictions import JsonlPredictionsWriter
 from gpt_gleam.progress import ChatCompletionProgress
 
@@ -16,7 +15,8 @@ from gpt_gleam.progress import ChatCompletionProgress
 def main(
     config: ChatCompletionConfig,
     data_path: str,
-    frame_path: str,
+    img_path: str,
+    demo_path: str,
     output_path: str,
     total: Optional[int] = None,
     debug: bool = False,
@@ -27,7 +27,6 @@ def main(
         timeout=os.getenv("OPENAI_TIMEOUT", 90),
     )
 
-    dataset = list(read_jsonl(args.dataset))
     if total is None:
         print("Counting total number of examples (requires iteration)...")
         total = len(dataset)
@@ -36,13 +35,13 @@ def main(
     with JsonlPredictionsWriter(output_path) as preds, ChatCompletionProgress(
         total=total, seen=len(preds), disable=debug
     ) as bar:
-        for post, frame, stance in iterate_post_frame_unlabeled_pairs(
-            data_path, frame_path, skip_stances=[Stance.Not_Relevant]
+        for post in iterate_data(
+            data_path, img_path
         ):
-            ex_id = f"{post.id}-{frame.id}-{stance.value}"
+            ex_id = post.filename
             if ex_id in preds:
                 continue
-            messages = creator.create_context(post, frame, stance)
+            messages = creator.create_context(post)
             completion = chat(
                 client,
                 delay=config.delay,
@@ -54,10 +53,10 @@ def main(
                 seed=config.seed,
             )
             if completion is None:
-                print(f"Skipping example due to API safety error: {post.id}, {frame.id}")
+                print(f"Skipping example due to API safety error: {post.filename}")
                 continue
             content = completion.choices[0].message.content
-            preds.add({"id": ex_id, "post_id": post.id, "f_id": frame.id, "stance": stance.value, "content": content})
+            preds.add({"id": ex_id, "content": content})
             messages.append({"role": "assistant", "content": content})
             if debug:
                 print_messages(messages)
@@ -68,7 +67,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True, help="path to config file")
     parser.add_argument("--data_path", type=str, required=True, help="path to data jsonl file")
-    parser.add_argument("--frame_path", type=str, required=True, help="path to frames json file")
+    parser.add_argument("--img_path", type=str, required=True, help="path to data jsonl file")
+    parser.add_argument("--demo_path", type=str, help="path to frames json file")
     parser.add_argument("--output_path", type=str, required=True, help="path to output jsonl file")
     parser.add_argument("--total", type=int, help="total number of examples to process")
     parser.add_argument("--debug", action="store_true", help="debug mode")
@@ -81,7 +81,8 @@ if __name__ == "__main__":
     main(
         config=config,
         data_path=args.data_path,
-        frame_path=args.frame_path,
+        img_path=args.img_path,
+        demo_path=args.demo_path,
         output_path=args.output_path,
         total=args.total,
         debug=args.debug,
