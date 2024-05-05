@@ -5,11 +5,11 @@ import yaml
 
 from openai import OpenAI
 from tqdm import tqdm
-from gpt_gleam.chat import ChatContextCreator, chat, print_messages
-from gpt_gleam.configuration import ChatCompletionConfig
-from gpt_gleam.data_utils import read_jsonl, Post, Frame, iterate_data
-from gpt_gleam.predictions import JsonlPredictionsWriter
-from gpt_gleam.progress import ChatCompletionProgress
+from setup.chat import ChatContextCreator, chat, print_messages
+from setup.configuration import ChatCompletionConfig
+from setup.data_utils import read_jsonl, Post, Frame, iterate_data
+from setup.predictions import JsonlPredictionsWriter
+from setup.progress import ChatCompletionProgress
 
 
 def main(
