@@ -57,7 +57,7 @@ class Post:
     filename: str
     image_url: str
 
-def iterate_data(data_path: str, image_path: str, demo_path: str, problems=False):
+def iterate_data(data_path: str, image_path: str):
     for ex in read_jsonl(data_path):
         ex_id=ex["file_name"]
         ex_img=os.path.join(image_path, ex_id)
