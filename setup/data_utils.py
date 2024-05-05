@@ -1,3 +1,17 @@
+from collections import defaultdict
+import dataclasses
+import html
+import os
+import re
+from typing import Iterator, Optional
+import unicodedata
+import base64
+
+import emoji
+import ujson as json
+import unidecode
+from enum import Enum
+
 def read_jsonl(path):
     with open(path, "r") as f:
         for line in f:
@@ -29,3 +43,11 @@ def encode_image_url(image_path):
 
     base64_image = encode_image(image_path)
     return f"data:image/{image_type};base64,{base64_image}"
+
+@dataclasses.dataclass
+class Post:
+    filename: str
+    image_url: str
+    frames: str
+    rationale: str
+    demonstrations: Optional[list[Post]] = None
