@@ -1,7 +1,7 @@
 import time
 from typing import Optional
-from gpt_gleam.configuration import ChatCompletionConfig
-from gpt_gleam.data_utils import Post
+from setup.configuration import ChatCompletionConfig
+from setup.data_utils import Post
 
 from openai import OpenAI, BadRequestError
 from openai.types.chat import ChatCompletion
