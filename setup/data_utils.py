@@ -45,9 +45,36 @@ def encode_image_url(image_path):
     return f"data:image/{image_type};base64,{base64_image}"
 
 @dataclasses.dataclass
+class Demo:
+    filename: str
+    image_url: str
+    frames: Optional[str]
+    rationale: Optional[str]
+    problems: Optional[str]
+
+@dataclasses.dataclass
 class Post:
     filename: str
     image_url: str
-    frames: str
-    rationale: str
-    demonstrations: Optional[list[Post]] = None
+
+def iterate_data(data_path: str, image_path: str, demo_path: str, problems=False):
+    for ex in read_jsonl(data_path):
+        ex_id=ex["file_name"]
+        ex_img=os.path.join(image_path, ex_id)
+        ex_img_url=encode_image_url(ex_img)
+        result={'filename':ex_id, 'image_url':ex_img_url}
+        result=Post(**result)
+    '''demo_list=[]
+    for d in read_jsonl(demo_path):
+        d_id=d['file_name']
+        d_img_url=encode_image_url(os.path.join(image_path, d_id))
+        frame=d['frame']
+        rationale=d['rationale']
+        if problems:
+            d_problems=d['problems']
+            demo={'filename':d_id, 'image_url':d_img_url, 'frame': frame, 'rationale':rationale, 'problems':d_problems}
+            demo=Demo(**demo)
+            demo_list.append(demo)'''
+        yield result    
+    
+    
